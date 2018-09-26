@@ -1,0 +1,82 @@
+﻿using DevExpress.XtraBars.Navigation;
+using DevExpress.XtraEditors;
+using DevExpress.XtraGrid;
+using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraSplashScreen;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace HelpLinkGenerator {
+    
+    public partial class Form1 : XtraForm {
+        string rePath;
+        private XtraFolderBrowserDialog folderBrowserDialog1;
+        private bool fileOpened = false;
+
+        public Form1() {
+            InitializeComponent();
+            this.folderBrowserDialog1 = new XtraFolderBrowserDialog();
+            //check folder first launch
+            if (!File.Exists(@"Data\DefaultRepoPath.txt")) {
+                System.IO.Directory.CreateDirectory(@"Data");
+                File.Create(@"Data\DefaultRepoPath.txt");
+            }
+            //load default repository path
+            if (LoadDefaultPath() == String.Empty) {
+                if (SelectRepoFolder() != DialogResult.OK) System.Environment.Exit(0);
+            }
+            RetrieveProductList();
+            comboBoxEdit1.EditValue = comboBoxEdit1.Properties.Items[0];
+            comboBoxEdit1.EditValueChanged += ComboBoxEdit1_EditValueChanged;
+    }
+
+        private void ComboBoxEdit1_EditValueChanged(object sender, EventArgs e) {
+            ReloadData();
+            
+        }
+
+        public void ReloadData() {
+            switch (officeNavigationBar1.SelectedItem.Text) {
+                case ("Members"):
+                    pageMembers.Controls.OfType<ucAPIMember>().First().RefreshData();
+                    break;
+            }
+        }
+
+        public string GetActiveProduct() {
+            return comboBoxEdit1.EditValue.ToString();
+        }
+
+        public string LoadDefaultPath() {
+            return rePath = System.IO.File.ReadAllText(@"Data\DefaultRepoPath.txt");
+        }
+
+        public DialogResult SelectRepoFolder() {
+            DialogResult result = folderBrowserDialog1.ShowDialog();
+            if (result == DialogResult.OK) {
+                rePath = folderBrowserDialog1.SelectedPath;
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"Data\DefaultRepoPath.txt", rePath);
+            }
+            ReloadData();
+            return result;
+        }
+
+
+        public void RetrieveProductList() {
+            foreach (string s in Directory.GetDirectories(rePath)) {
+                comboBoxEdit1.Properties.Items.Add(s.Remove(0, rePath.Length+1));
+            }
+        }
+
+        private void simpleButton1_Click(object sender, EventArgs e) {
+            SelectRepoFolder();
+        }
+    }
+}
