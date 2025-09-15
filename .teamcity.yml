@@ -1,0 +1,6 @@
+jobs:
+  Job1:
+    name: Job 1
+    steps: []
+  Job2:
+    name: Job 2
